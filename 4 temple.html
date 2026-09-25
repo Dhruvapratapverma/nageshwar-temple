@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nageshwar Temple Blueprint — Interactive Documentation</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff;
+            color: #1d1d1f;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- Fully Responsive Main Stage Container --- */
+        .blueprint-stage {
+            position: relative;
+            width: 98vw;
+            height: 96vh;
+            max-width: 1700px;
+            max-height: 950px;
+            background: #ffffff;
+            border: 1px solid #e5e5e7;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* --- SVG Vector Scaling --- */
+        .blueprint-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+        }
+
+        /* --- Vector Line Art Styles --- */
+        .black-line { stroke: #1d1d1f; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .black-thin { stroke: #86868b; stroke-width: 1; fill: none; }
+        .black-dash { stroke: #86868b; stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
+        .black-fill { fill: rgba(0, 0, 0, 0.04); stroke: #1d1d1f; stroke-width: 1.5; }
+        .svg-label { fill: #1d1d1f; font-family: SFMono-Regular, Consolas, monospace; font-size: 10px; font-weight: 600; }
+
+        /* --- Interactive Hover Target Regions --- */
+        .interactive-zone {
+            fill: rgba(0, 0, 0, 0.01);
+            stroke: rgba(0, 0, 0, 0.08);
+            stroke-width: 1;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .interactive-group:hover .interactive-zone {
+            fill: rgba(0, 0, 0, 0.06);
+            stroke: #000000;
+            stroke-width: 2;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.12));
+        }
+
+        /* --- Smart Fixed-Position Hover Tooltip Overlay --- */
+        .glass-overlay {
+            position: fixed;
+            z-index: 500;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            width: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(0, 0, 0, 0.14);
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
+            color: #1d1d1f;
+            transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+            will-change: transform, top, left;
+        }
+
+        .glass-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .overlay-tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #86868b;
+            margin-bottom: 4px;
+        }
+        .overlay-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #000000;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.01em;
+        }
+        .overlay-desc {
+            font-size: 0.82rem;
+            color: #333336;
+            line-height: 1.45;
+            margin: 0 0 10px 0;
+            font-weight: 400;
+        }
+        .overlay-spec {
+            font-size: 0.7rem;
+            font-family: SFMono-Regular, Consolas, monospace;
+            color: #1d1d1f;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            padding: 5px 8px;
+            display: inline-block;
+        }
+
+        /* --- Info Trigger Button (Left Center) --- */
+        .info-trigger-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 30px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .info-trigger-btn:hover {
+            background: #000000;
+            color: #ffffff;
+            border-color: #000000;
+            transform: translateY(-50%) scale(1.04);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+        }
+        .info-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1.5px solid currentColor;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: serif;
+            font-style: italic;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        /* --- History Modal Overlay --- */
+        .history-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 600;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 16px;
+        }
+        .history-modal-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .history-modal-card {
+            width: 100%;
+            max-width: 680px;
+            max-height: 85vh;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 24px;
+            padding: 36px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .history-modal-backdrop.active .history-modal-card {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            color: #1d1d1f;
+            transition: background 0.2s;
+        }
+        .modal-close-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .history-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #000000;
+            margin: 0 0 6px 0;
+        }
+        .history-subtitle {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #86868b;
+            margin-bottom: 24px;
+        }
+        .history-body p {
+            font-size: 0.95rem;
+            color: #333336;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        .history-body h4 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #000000;
+            margin: 20px 0 8px 0;
+        }
+
+        /* --- Device-Specific Responsive Adjustments --- */
+        @media (max-width: 768px) {
+            .blueprint-stage {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+                padding: 8px;
+            }
+            .info-trigger-btn {
+                left: 12px;
+                top: 12px;
+                transform: none;
+                padding: 8px 14px;
+                font-size: 0.78rem;
+            }
+            .info-trigger-btn:hover {
+                transform: scale(1.02);
+            }
+            .glass-overlay {
+                width: calc(100vw - 32px);
+                max-width: 320px;
+            }
+            .history-modal-card {
+                padding: 24px;
+                max-height: 90vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Responsive Blueprint Stage -->
+    <div class="blueprint-stage" id="blueprint-stage">
+
+        <!-- Info Trigger Button (Left Center) -->
+        <button class="info-trigger-btn" id="info-btn">
+            <span class="info-icon">i</span>
+            <span>Temple History</span>
+        </button>
+
+        <!-- Smart Dynamic Tooltip Overlay -->
+        <div class="glass-overlay" id="glass-overlay">
+            <div class="overlay-tag" id="overlay-tag">ARCHITECTURAL COMPONENT</div>
+            <h4 class="overlay-title" id="overlay-title">Title</h4>
+            <p class="overlay-desc" id="overlay-desc">Description</p>
+            <div class="overlay-spec" id="overlay-spec">Spec</div>
+        </div>
+
+        <!-- Fully Responsive SVG Blueprint -->
+        <svg class="blueprint-svg" viewBox="0 0 680 490" preserveAspectRatio="xMidYMid meet">
+            
+            <!-- 1. TOP HEADER / TITLE BLOCK -->
+            <g class="interactive-group" data-key="header">
+                <rect x="80" y="8" width="560" height="34" class="interactive-zone" rx="4"/>
+                <rect x="80" y="8" width="560" height="34" class="black-line"/>
+                <text x="360" y="30" text-anchor="middle" class="svg-label" font-size="12px">NAGESHWAR TYOTIRLINGA TEMPLE - ARCHITECTURAL BLUEPRINT</text>
+            </g>
+
+            <!-- 2. TOP LEFT: PLAN - (MAIN LEVEL) -->
+            <g class="interactive-group" data-key="plan">
+                <rect x="70" y="52" width="210" height="140" class="interactive-zone" rx="8"/>
+                <rect x="80" y="62" width="190" height="120" class="black-line"/>
+                <rect x="105" y="78" width="140" height="88" class="black-fill"/>
+                <rect x="150" y="98" width="50" height="48" class="black-line"/>
+                <circle cx="175" cy="122" r="14" fill="rgba(0, 0, 0, 0.06)" stroke="#1d1d1f" stroke-width="1.5"/>
+                <text x="175" y="126" text-anchor="middle" class="svg-label">G</text>
+                <line x1="175" y1="52" x2="175" y2="192" class="black-dash"/>
+                <text x="175" y="48" text-anchor="middle" class="svg-label">PLAN - (MAIN LEVEL)</text>
+            </g>
+
+            <!-- 3. BOTTOM LEFT: SITE LAYOUT & GARBHAGRIHA -->
+            <g class="interactive-group" data-key="site">
+                <rect x="15" y="210" width="265" height="260" class="interactive-zone" rx="8"/>
+                <rect x="25" y="220" width="245" height="240" class="black-line"/>
+                <rect x="40" y="235" width="135" height="135" class="black-line"/>
+                <rect x="75" y="270" width="65" height="65" class="black-fill"/>
+                <circle cx="107" cy="302" r="12" fill="none" stroke="#1d1d1f" stroke-width="1.5"/>
+                <text x="107" y="306" text-anchor="middle" class="svg-label">G</text>
+                
+                <rect x="185" y="235" width="75" height="135" class="black-line"/>
+                <circle cx="222" cy="275" r="15" fill="rgba(0, 0, 0, 0.08)" stroke="#1d1d1f" stroke-width="1.5"/>
+                <text x="222" y="279" text-anchor="middle" class="svg-label">S</text>
+                <path d="M 195 310 L 250 355 M 195 320 L 240 360" class="black-thin"/>
+
+                <text x="100" y="198" class="svg-label">G- Garbhagriha (Below Ground)</text>
+                <text x="100" y="208" class="svg-label">SITE LAYOUT -</text>
+            </g>
+
+            <!-- 4. RIGHT TOP: UPPER SHIKHAR SPIRE -->
+            <g class="interactive-group" data-key="shikhar">
+                <polygon points="500,55 415,180 585,180" class="interactive-zone"/>
+                <path d="M 500 55 L 478 105 L 522 105 Z M 468 128 L 532 128 M 445 152 L 555 152 M 415 180 L 585 180" class="black-line"/>
+                <line x1="500" y1="45" x2="500" y2="180" class="black-dash"/>
+                <text x="500" y="42" text-anchor="middle" class="svg-label">UPPER SHIKHAR SPIRE</text>
+            </g>
+
+            <!-- 5. RIGHT MIDDLE: SABHA MANDAP & PILLARS -->
+            <g class="interactive-group" data-key="mandap">
+                <rect x="360" y="180" width="265" height="100" class="interactive-zone"/>
+                <rect x="360" y="180" width="265" height="100" class="black-line"/>
+                <line x1="410" y1="180" x2="410" y2="280" class="black-line" stroke-width="3"/>
+                <line x1="465" y1="180" x2="465" y2="280" class="black-line" stroke-width="3"/>
+                <line x1="525" y1="180" x2="525" y2="280" class="black-line" stroke-width="3"/>
+                <line x1="580" y1="180" x2="580" y2="280" class="black-line" stroke-width="3"/>
+                <text x="492" y="235" text-anchor="middle" class="svg-label">SABHA MANDAP (MAIN HALL)</text>
+            </g>
+
+            <!-- 6. RIGHT BOTTOM: SUBTERRANEAN PIT & GARBHAGRIHA -->
+            <g class="interactive-group" data-key="pit">
+                <path d="M 370 280 L 440 280 L 440 330 L 440 450 L 625 450 L 625 280 Z" class="interactive-zone"/>
+                <path d="M 370 280 L 390 280 L 390 305 L 410 305 L 410 330 L 430 330 L 430 355 L 450 355 L 450 380" class="black-line" stroke-width="2"/>
+                <line x1="450" y1="380" x2="615" y2="380" class="black-thin"/>
+                <line x1="450" y1="405" x2="615" y2="405" class="black-thin"/>
+                <line x1="450" y1="430" x2="615" y2="430" class="black-thin"/>
+                <rect x="505" y="380" width="65" height="55" class="black-fill"/>
+                <path d="M 527 402 A 10 10 0 0 1 547 402 L 547 422 L 527 422 Z" fill="#1d1d1f"/>
+                <text x="537" y="442" text-anchor="middle" class="svg-label">JYOTIRLINGA</text>
+            </g>
+        </svg>
+
+    </div>
+
+    <!-- Full History Modal Overlay -->
+    <div class="history-modal-backdrop" id="modal-backdrop">
+        <div class="history-modal-card">
+            <button class="modal-close-btn" id="modal-close">✕</button>
+            <div class="history-title">Nageshwar Jyotirlinga</div>
+            <div class="history-subtitle">Comprehensive Scriptural &amp; Historical Record</div>
+            
+            <div class="history-body">
+                <h4>1. Sacred Origins &amp; Puranic Legend</h4>
+                <p>According to the <i>Shiva Purana</i>, Lord Shiva manifested as a fiery pillar of light (Jyotirlinga) in the ancient forest of <b>Darukavana</b>. A demon named Daruka and his wife Daruki captured a devout follower named Supriya alongside local villagers. When Supriya led the captives in chanting <i>Om Namah Shivaya</i>, Shiva manifested as Nageshwar ("Lord of Serpents") to vanquish the demons and established his permanent presence at the site.</p>
+
+                <h4>2. Subterranean Preservation Over Centuries</h4>
+                <p>Situated on the Arabian Sea coastline of Dwarka, Gujarat, the temple's original upper stone structures were repeatedly damaged and submerged due to coastal erosion, siltation, and historical disruptions over centuries. While the ancient stone halls collapsed above ground, the core sacred artifact—a small, tri-mukhi (three-faced) stone Lingam—remained intact in an underground basement pit (-2.80 meters below ground level).</p>
+
+                <h4>3. The 1996 Modern Reconstruction</h4>
+                <p>In 1996, T-Series founder Gulshan Kumar and local temple trusts commissioned a complete rebuilding of the complex. Contractors built the modern reddish-orange Maru-Gurjara superstructure and an 85-foot (25m) seated Lord Shiva statue in the courtyard directly above the original site, preserving the subterranean Garbhagriha intact below.</p>
+
+                <h4>4. Architectural Blueprint Alignment</h4>
+                <p>The blueprint drawing sheet details this exact dual-layer arrangement: the upper ground level features the pillared Sabha Mandap and Maru-Gurjara spire, while a central stairwell allows devotees to descend into the preserved sub-grade pit to worship the ancient Lingam.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Positioning & Event Scripts -->
+    <script>
+        const overlayData = {
+            header: {
+                tag: "ARCHITECTURAL SHEET TITLE",
+                title: "Nageshwar Jyotirlinga Header",
+                desc: "Official architectural drawing sheet documenting the elevation cutaway, site layout, and sub-grade sanctum.",
+                spec: "SCALE 1:200 • GUJARAT SITE PLAN"
+            },
+            plan: {
+                tag: "GROUND LEVEL PLAN",
+                title: "PLAN - (MAIN LEVEL)",
+                desc: "Top-down view of the ground assembly hall showing the outer walls, 3x3 support column grid, and central stairwell opening leading to the lower shrine (G).",
+                spec: "LEVEL: +0.60M • REINFORCED CONCRETE"
+            },
+            site: {
+                tag: "COMPOUND SITE LAYOUT",
+                title: "SITE LAYOUT & GARBHAGRIHA",
+                desc: "Full site boundaries mapping the underground sanctum (G) directly aligned beneath the temple spire, and the eastern courtyard featuring the landmark Shiva statue (S).",
+                spec: "G: PIT SANCTUM • S: 85 FT STATUE"
+            },
+            shikhar: {
+                tag: "SUPERSTRUCTURE PROFILE",
+                title: "UPPER SHIKHAR SPIRE",
+                desc: "Stepped Maru-Gurjara pyramidal tower reaching +33.5 meters. Built during the 1996 rebuilding using salt-resistant materials.",
+                spec: "HEIGHT: +33.5M • MARU-GURJARA STYLE"
+            },
+            mandap: {
+                tag: "MAIN ASSEMBLY HALL",
+                title: "SABHA MANDAP & PILLARS",
+                desc: "Upper hall supported by heavy internal stone and concrete pillars where worshippers gather above the subterranean chamber.",
+                spec: "CAPACITY: 500+ DEVOTEES • STRUCTURAL FRAME"
+            },
+            pit: {
+                tag: "HISTORIC CORE - SUB-GRADE",
+                title: "G- Garbhagriha (Below Ground)",
+                desc: "The ancient basement pit (-2.8m). Devotees descend the stone stairs to reach the original tri-mukhi stone Jyotirlinga preserved beneath the modern temple.",
+                spec: "DEPTH: -2.80M SSL • ANCIENT STONE LINGAM"
+            }
+        };
+
+        const overlay = document.getElementById('glass-overlay');
+        const groups = document.querySelectorAll('.interactive-group');
+
+        // Smart Viewport Boundary Calculation for Tooltip Position
+        function positionOverlay(e) {
+            const overlayWidth = overlay.offsetWidth || 300;
+            const overlayHeight = overlay.offsetHeight || 180;
+            const padding = 16; // Edge margin from window border
+
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+
+            // Default position: above cursor centered horizontally
+            let left = clientX - overlayWidth / 2;
+            let top = clientY - overlayHeight - 16;
+
+            // Check Top Boundary Collision: If top edge goes out of window, flip below cursor
+            if (top < padding) {
+                top = clientY + 20;
+            }
+
+            // Check Bottom Boundary Collision
+            if (top + overlayHeight > window.innerHeight - padding) {
+                top = window.innerHeight - overlayHeight - padding;
+            }
+
+            // Check Left Boundary Collision
+            if (left < padding) {
+                left = padding;
+            }
+
+            // Check Right Boundary Collision
+            if (left + overlayWidth > window.innerWidth - padding) {
+                left = window.innerWidth - overlayWidth - padding;
+            }
+
+            overlay.style.left = `${left}px`;
+            overlay.style.top = `${top}px`;
+        }
+
+        groups.forEach(group => {
+            group.addEventListener('mouseenter', (e) => {
+                const key = group.getAttribute('data-key');
+                const data = overlayData[key];
+
+                if (data) {
+                    document.getElementById('overlay-tag').innerText = data.tag;
+                    document.getElementById('overlay-title').innerText = data.title;
+                    document.getElementById('overlay-desc').innerText = data.desc;
+                    document.getElementById('overlay-spec').innerText = data.spec;
+
+                    overlay.classList.add('visible');
+                    positionOverlay(e);
+                }
+            });
+
+            group.addEventListener('mousemove', (e) => {
+                positionOverlay(e);
+            });
+
+            group.addEventListener('mouseleave', () => {
+                overlay.classList.remove('visible');
+            });
+
+            // Touch device support (mobile/tablet tap)
+            group.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                const key = group.getAttribute('data-key');
+                const data = overlayData[key];
+
+                if (data) {
+                    document.getElementById('overlay-tag').innerText = data.tag;
+                    document.getElementById('overlay-title').innerText = data.title;
+                    document.getElementById('overlay-desc').innerText = data.desc;
+                    document.getElementById('overlay-spec').innerText = data.spec;
+
+                    overlay.classList.add('visible');
+                    positionOverlay(touch);
+                }
+            }, { passive: true });
+        });
+
+        // Hide overlay on outside tap/scroll for touch devices
+        window.addEventListener('touchstart', (e) => {
+            if (!e.target.closest('.interactive-group')) {
+                overlay.classList.remove('visible');
+            }
+        }, { passive: true });
+
+        // History Modal Events
+        const infoBtn = document.getElementById('info-btn');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalClose = document.getElementById('modal-close');
+
+        infoBtn.addEventListener('click', () => {
+            modalBackdrop.classList.add('active');
+        });
+
+        modalClose.addEventListener('click', () => {
+            modalBackdrop.classList.remove('active');
+        });
+
+        modalBackdrop.addEventListener('click', (e) => {
+            if (e.target === modalBackdrop) {
+                modalBackdrop.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
